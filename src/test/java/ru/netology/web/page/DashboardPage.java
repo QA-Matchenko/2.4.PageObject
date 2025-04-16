@@ -1,10 +1,12 @@
 package ru.netology.web.page;
 
+import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
 import ru.netology.web.data.DataHelper;
 
-import static com.codeborne.selenide.Condition.*;
+import static com.codeborne.selenide.Condition.attribute;
+import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
 
@@ -13,20 +15,16 @@ public class DashboardPage {
     private ElementsCollection cards = $$(".list__item div");
     private final String balanceStart = "баланс: ";
     private final String balanceFinish = " р.";
-    private final SelenideElement heading = $("[data-test-id=dashboard]");
-    private final SelenideElement reloadButton = $ ("data-test-id='action-reload']");
+    private SelenideElement heading = $("[data-test-id=dashboard]");
 
     public DashboardPage() {
         heading.shouldBe(visible);
     }
 
-    public int getCardBalance(DataHelper.CardInfo index) {
-        DataHelper.CardInfo cardInfo = null;
-        var text = getCard(cardInfo).getText();
+    public int getCardBalance(DataHelper.CardInfo cardInfo) {
+        var text = cards.findBy(Condition.text(cardInfo.getCardNumber().substring(15))).getText();
         return extractBalance(text);
     }
-
-
 
     private int extractBalance(String text) {
         var start = text.indexOf(balanceStart);
@@ -36,17 +34,7 @@ public class DashboardPage {
     }
 
     public TransferPage selectCardToTransfer(DataHelper.CardInfo cardInfo) {
-        getCard(cardInfo).$("button").click();
+        cards.findBy(attribute("data-test-id", cardInfo.getTestID())).$("button").click();
         return new TransferPage();
-    }
-    private SelenideElement getCard(DataHelper.CardInfo cardInfo) {
-        return cards.findBy(attribute("data-test-id", cardInfo.getTestID()));
-    }
-    public void reloadDashboardPage(){
-        reloadButton.click();
-        heading.shouldBe(visible);
-    }
-    public void checkCardBalance(DataHelper.CardInfo cardInfo, int expectedBalance) {
-        getCard(cardInfo).should(visible).should(text(balanceStart + expectedBalance + balanceFinish));
     }
 }
